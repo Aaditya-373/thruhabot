@@ -23,12 +23,19 @@ bot = commands.Bot(command_prefix="!", intents=intents)
 @tasks.loop(minutes=60)
 async def join_play_disconnect():
     print("Scheduled task triggered...")
+
+    tasks_list = []
     for guild in bot.guilds:
-        try:
-            await process_guild(guild)
-        except Exception as e:
-            print(f"Failed to process {guild.name}: {e}")
-            traceback.print_exc()
+        tasks_list.append(process_guild(guild))
+
+    results = await asyncio.gather(*tasks_list, return_exceptions=True)
+
+    for guild, result in zip(bot.guilds, results):
+        if isinstance(result, Exception):
+            print(f"Failed to process {guild.name}: {result}")
+            traceback.print_exception(type(result), result, result.__traceback__)
+        else:
+            print(f"Finished processing {guild.name}")
 
 
 async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
@@ -39,8 +46,7 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
             return await channel.connect(timeout=timeout)
         except discord.errors.ConnectionClosed as e:
             if e.code == 4006:
-                print(
-                    f"[Attempt {attempt}] Voice WS closed (4006). Retrying in 5s...")
+                print(f"[Attempt {attempt}] Voice WS closed (4006). Retrying in 5s...")
                 await asyncio.sleep(5)
             else:
                 raise
@@ -52,11 +58,8 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
 
 
 async def process_guild(guild):
-    voice_channels = [
-        c for c in guild.voice_channels if isinstance(c, discord.VoiceChannel)
-    ]
-    active_channel = next(
-        (vc for vc in voice_channels if any(not m.bot for m in vc.members)), None)
+    voice_channels = [c for c in guild.voice_channels if isinstance(c, discord.VoiceChannel)]
+    active_channel = next((vc for vc in voice_channels if any(not m.bot for m in vc.members)), None)
 
     if not active_channel:
         print(f"No active VC with users in {guild.name}")
@@ -87,7 +90,6 @@ async def process_guild(guild):
     while voice.is_playing():
         await asyncio.sleep(1)
 
-    # Kick a random user
     member = guild.get_member(368387023914008598)
     if member and member.voice:
         print(f"Kicking {member.display_name} from {active_channel.name}")
