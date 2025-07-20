@@ -20,7 +20,7 @@ AUDIO_SOURCE_DIR = "."
 bot = commands.Bot(command_prefix="!", intents=intents)
 
 
-@tasks.loop(seconds=20)
+@tasks.loop(minutes=20)
 async def join_play_disconnect():
     print("Scheduled task triggered...")
     for guild in bot.guilds:
