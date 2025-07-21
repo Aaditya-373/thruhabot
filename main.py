@@ -14,7 +14,7 @@ intents.message_content = True
 intents.members = True
 
 BOT_TOKEN = os.getenv("BOT_TOKEN")
-AUDIO_LIST = ["duplicate_indian.mp3", "leftra.mp3", "sleeper.mp3"]
+AUDIO_LIST = ["duplicate_indian.mp3", "leftra.mp3", "sleeper.mp3","okaybuzzy.mp4.wav"]
 AUDIO_SOURCE_DIR = "."
 
 bot = commands.Bot(command_prefix="!", intents=intents)
