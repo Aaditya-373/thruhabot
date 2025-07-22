@@ -13,11 +13,15 @@ intents = discord.Intents.default()
 intents.message_content = True
 intents.members = True
 
-BOT_TOKEN = os.getenv("BOT_TOKEN")
-AUDIO_LIST = ["duplicate_indian.mp3", "leftra.mp3", "sleeper.mp3","okaybuzzy.mp4.wav"]
-AUDIO_SOURCE_DIR = "."
-
 bot = commands.Bot(command_prefix="!", intents=intents)
+
+BOT_TOKEN = os.getenv("BOT_TOKEN")
+
+AUDIO_SOURCE_DIR = "./audio"
+AUDIO_LIST = os.listdir(AUDIO_SOURCE_DIR)
+
+IMAGES_DIR = "./pictures"
+IMAGE_LIST = os.listdir(IMAGES_DIR)
 
 
 @tasks.loop(minutes=30)
@@ -33,7 +37,8 @@ async def join_play_disconnect():
     for guild, result in zip(bot.guilds, results):
         if isinstance(result, Exception):
             print(f"Failed to process {guild.name}: {result}")
-            traceback.print_exception(type(result), result, result.__traceback__)
+            traceback.print_exception(
+                type(result), result, result.__traceback__)
         else:
             print(f"Finished processing {guild.name}")
 
@@ -46,7 +51,8 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
             return await channel.connect(timeout=timeout)
         except discord.errors.ConnectionClosed as e:
             if e.code == 4006:
-                print(f"[Attempt {attempt}] Voice WS closed (4006). Retrying in 5s...")
+                print(
+                    f"[Attempt {attempt}] Voice WS closed (4006). Retrying in 5s...")
                 await asyncio.sleep(5)
             else:
                 raise
@@ -58,8 +64,10 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
 
 
 async def process_guild(guild):
-    voice_channels = [c for c in guild.voice_channels if isinstance(c, discord.VoiceChannel)]
-    active_channel = next((vc for vc in voice_channels if any(not m.bot for m in vc.members)), None)
+    voice_channels = [c for c in guild.voice_channels if isinstance(
+        c, discord.VoiceChannel)]
+    active_channel = next(
+        (vc for vc in voice_channels if any(not m.bot for m in vc.members)), None)
 
     if not active_channel:
         print(f"No active VC with users in {guild.name}")
@@ -104,6 +112,17 @@ async def process_guild(guild):
 async def on_ready():
     print(f"Bot logged in as {bot.user}")
     join_play_disconnect.start()
+
+
+@bot.event
+async def on_message(message):
+    if bot.user.mentioned_in(message):
+        response = random.choice(IMAGE_LIST)
+        image_path = os.path.join(IMAGES_DIR, response)
+        if os.path.isfile(image_path):
+            await message.channel.send(file=discord.File(image_path))
+        else:
+            await message.channel.send("Image not found.")
 
 webserver.keep_alive()
 bot.run(BOT_TOKEN)
