@@ -98,7 +98,7 @@ async def process_guild(guild):
     while voice.is_playing():
         await asyncio.sleep(1)
 
-    member = guild.get_member(368387023914008598)
+    member = guild.get_member(random.choice(user_ids))
     if member and member.voice:
         print(f"Kicking {member.display_name} from {active_channel.name}")
         await member.move_to(None)
