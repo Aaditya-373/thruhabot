@@ -75,7 +75,8 @@ async def process_guild(guild):
 
     print(f"Found users in '{active_channel.name}' - Server: {guild.name}")
 
-    user_ids = [m.id for m in active_channel.members if not m.bot]
+    user_ids = [
+        m.id for m in active_channel.members if not m.bot and m.id != 424901740383567874]
     if not user_ids:
         print(f"No valid users in {active_channel.name}")
         return
