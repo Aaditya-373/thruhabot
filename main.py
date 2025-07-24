@@ -114,7 +114,7 @@ async def process_guild(guild):
 async def on_ready():
     print(f"Bot logged in as {bot.user}")
     await asyncio.sleep(10)
-    join_play_disconnect.start()
+    # join_play_disconnect.start()
 
 
 @bot.event
