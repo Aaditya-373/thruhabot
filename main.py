@@ -62,7 +62,6 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
             await asyncio.sleep(attempt * 5)
     print("Voice connection failed after retries.")
     return None
-e
 
 
 async def process_guild(guild):
