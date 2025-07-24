@@ -51,16 +51,18 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
             return await channel.connect(timeout=timeout)
         except discord.errors.ConnectionClosed as e:
             if e.code == 4006:
+                wait_time = attempt * 5
                 print(
-                    f"[Attempt {attempt}] Voice WS closed (4006). Retrying in 5s...")
-                await asyncio.sleep(5)
+                    f"[Attempt {attempt}] WS closed (4006). Waiting {wait_time}s before retry...")
+                await asyncio.sleep(wait_time)
             else:
                 raise
         except Exception as e:
-            print(f"[Attempt {attempt}] Unexpected connect error: {e}")
-            await asyncio.sleep(5)
-    print("Voice connect failed after all retries.")
+            print(f"[Attempt {attempt}] Unexpected error: {e}")
+            await asyncio.sleep(attempt * 5)
+    print("Voice connection failed after retries.")
     return None
+e
 
 
 async def process_guild(guild):
@@ -112,6 +114,7 @@ async def process_guild(guild):
 @bot.event
 async def on_ready():
     print(f"Bot logged in as {bot.user}")
+    await asyncio.sleep(10)
     join_play_disconnect.start()
 
 
@@ -126,4 +129,5 @@ async def on_message(message):
             await message.channel.send("Image not found.")
 
 webserver.keep_alive()
+
 bot.run(BOT_TOKEN)
