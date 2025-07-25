@@ -64,6 +64,54 @@ async def safe_connect(channel: discord.VoiceChannel, retries=3, timeout=15):
     return None
 
 
+@bot.command(name="dick")
+async def dick_command(ctx):
+    guild = ctx.guild
+    voice_channels = [c for c in guild.voice_channels if isinstance(
+        c, discord.VoiceChannel)]
+    active_channel = next(
+        (vc for vc in voice_channels if any(not m.bot for m in vc.members)), None)
+
+    if not active_channel:
+        print(f"No active VC with users in {guild.name}")
+        return
+
+    print(f"Found users in '{active_channel.name}' - Server: {guild.name}")
+
+    user_ids = [
+        m.id for m in active_channel.members if not m.bot and m.id != 424901740383567874]
+    if not user_ids:
+        print(f"No valid users in {active_channel.name}")
+        return
+
+    voice = await safe_connect(active_channel)
+    if not voice:
+        print(f"Skipping {guild.name} due to voice failure.")
+        return
+
+    audio_file = random.choice(AUDIO_LIST)
+    audio_path = os.path.join(AUDIO_SOURCE_DIR, audio_file)
+    if not os.path.isfile(audio_path):
+        print(f"Audio file missing: {audio_path}")
+        await voice.disconnect()
+        return
+
+    print(f"Playing {audio_file} in {active_channel.name}")
+    voice.play(discord.FFmpegPCMAudio(audio_path))
+
+    while voice.is_playing():
+        await asyncio.sleep(1)
+
+    member = guild.get_member(random.choice(user_ids))
+    if member and member.voice:
+        print(f"Kicking {member.display_name} from {active_channel.name}")
+        await member.move_to(None)
+        await asyncio.sleep(1)
+
+    await voice.disconnect()
+    print(f"Completed action in {guild.name}")
+
+
 async def process_guild(guild):
     voice_channels = [c for c in guild.voice_channels if isinstance(
         c, discord.VoiceChannel)]
@@ -126,6 +174,7 @@ async def on_message(message):
             await message.channel.send(file=discord.File(image_path))
         else:
             await message.channel.send("Image not found.")
+    await bot.process_commands(message)
 
 webserver.keep_alive()
 
