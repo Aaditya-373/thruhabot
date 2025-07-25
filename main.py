@@ -1,3 +1,4 @@
+from tkinter.tix import IMAGE
 import discord
 from discord.ext import commands, tasks
 from dotenv import load_dotenv
@@ -120,6 +121,7 @@ async def on_ready():
 @bot.event
 async def on_message(message):
     if bot.user.mentioned_in(message):
+        random.shuffle(IMAGE_LIST)
         response = random.choice(IMAGE_LIST)
         image_path = os.path.join(IMAGES_DIR, response)
         if os.path.isfile(image_path):
